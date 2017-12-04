@@ -1,8 +1,12 @@
 # xroach
 
-The classic `xroach` for X11: a game of skill. Try to find the roaches
-under your windows. Cleaned up for modern C compilers. Please be aware
-that this version has several bugs and glitches.
+The classic `xroach` game for X11: displays disgusting cockroaches on your root
+window. These creepy crawlies scamper around until they find a window to
+hide under. Whenever you move or iconify a window, the exposed beetles again
+scamper for cover.
+
+Cleaned up for modern C compilers. Please be aware that this version still has
+some bugs and glitches.
 
 ## Build
 ```
