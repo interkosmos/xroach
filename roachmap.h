@@ -27,16 +27,16 @@
 
 #include "squish.xbm"
 
-#define ROACH_HEADINGS  24    /* number of orientations */
-#define ROACH_ANGLE     15    /* angle between orientations */
+#define ROACH_HEADINGS 24    /* number of orientations */
+#define ROACH_ANGLE    15    /* angle between orientations */
 
 typedef struct RoachMap {
     char *roachBits;
-    float cosine;
-    float sine;
-    int height;
-    int width;
     Pixmap pixmap;
+    int width;
+    int height;
+    float sine;
+    float cosine;
 } RoachMap;
 
 RoachMap roachPix[] = {
