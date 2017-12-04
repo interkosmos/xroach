@@ -12,11 +12,11 @@ $ make
 
 ## Run
 ```
-$ ./xroach -speed 0.05 -squish -rc brown -rgc yellowgreen
+$ ./xroach -speed 2 -squish -rc brown -rgc yellowgreen
 ```
 
 ## Copyright
 Original copyright 1991 by J.T. Anderson. Squish option contributed by
 Rick Petkiewizc. Virtual root code adapted from patch sent by Colin
 Rafferty who borrowed it from Tom LaStrange. Several other folks sent
-similar fixes.
+similar fixes. Some glitches removed by patch from Guus Sliepen. 

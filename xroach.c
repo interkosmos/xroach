@@ -12,9 +12,9 @@
       cc -o xroach -lX11 -lm -I/usr/local/include/ -L/usr/local/lib xroach.c
 
     To run:
-      ./xroach -speed 0.05 -squish -rc brown -rgc yellowgreen
+      ./xroach -speed 2 -squish -rc brown -rgc yellowgreen
 
-    Dedicated to Greg McFarlane.   (gregm@otc.otca.oz.au)
+    Dedicated to Greg McFarlane. (gregm@otc.otca.oz.au)
     
     Squish option contributed by Rick Petkiewizc (rick@locus.com)
     
@@ -22,7 +22,10 @@
     borrowed it from Tom LaStrange.  Several other folks sent similar
     fixes.
 
-    Last update: 5 December 2017
+    Some glitches removed by patch from Guus Sliepen (guus@sliepen.warande.net)
+    in 2001 (see https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=102668#5).
+
+    Last update: 4 December 2017
 */
 
 /* @(#)xroach.c	1.5 4/2/91 11:53:31 */
@@ -92,6 +95,7 @@ Roach *roaches;
 int maxRoaches = 10;
 int curRoaches = 0;
 float roachSpeed = 20.0;
+float turnSpeed = 10.0;
 
 Region rootVisible = NULL;
 
@@ -148,6 +152,12 @@ int main(int ac, char *av[]) {
         else
             Usage();
     }
+
+    /* Compensate rate of turning for speed of movement. */
+    turnSpeed = 200 / roachSpeed;
+
+    if (turnSpeed < 1)
+        turnSpeed = 1;
 
     srand((unsigned int) time((time_t *) NULL));
 
@@ -250,9 +260,9 @@ int main(int ac, char *av[]) {
             else
                 nVis = MarkHiddenRoaches();
 
-            if (nVis) {
-                ev.type = SCAMPER_EVENT;
+            ev.type = SCAMPER_EVENT;
 
+            if (nVis) {
                 if (!squishWinUp && squishRoach) {
                     XMapWindow(display, squishWin);
                     squishWinUp = True;
@@ -263,12 +273,14 @@ int main(int ac, char *av[]) {
                     squishWinUp = False;
                 }
 
+                /*
                 if (needCalc == 0)
                     DrawRoaches();
 
                 eventBlock = 1;
                 XNextEvent(display, &ev);
                 eventBlock = 0;
+                */
             }
         }
 
@@ -280,6 +292,8 @@ int main(int ac, char *av[]) {
                 }
 
                 DrawRoaches();
+                XFlush(display);
+                usleep(20000);
                 XSync(display, False);
                 break;
 
@@ -296,8 +310,11 @@ int main(int ac, char *av[]) {
 
             case ButtonPress:
                 checkSquish(&ev);
+                done = !curRoaches;     /* Stop program if there are no more roaches */
                 break;
 
+            default:
+               break;
         }
     }
 
@@ -470,7 +487,7 @@ void AddRoach() {
         r->intX = -1;
         r->intY = -1;
         r->hidden = 0;
-        r->steps = RandInt(200);
+        r->steps = RandInt(turnSpeed);
         r->turnLeft = RandInt(100) >= 50;
     }
 }
@@ -518,8 +535,18 @@ void MoveRoach(int rx) {
 
         if (roach->steps-- <= 0) {
             TurnRoach(roach);
-            roach->steps = RandInt(200);
+            roach->steps = RandInt(turnSpeed);
+
+            /* Previously, roaches would just go around in circles.
+               This makes their movement more interesting (and disgusting too!). */
+            if (RandInt(100) >= 80) {
+                roach->turnLeft ^= 1;
+            }
         }
+
+        /* This is a kind of anti-collision algorithm which doesn't do what it is supposed to do,
+           it eats CPU time and sometimes makes roaches spin around very crazy. Therefore it is
+           commented out.
 
         for (ii = rx + 2; ii < curRoaches; ii++) {
             r2 = &roaches[ii];
@@ -531,6 +558,7 @@ void MoveRoach(int rx) {
                 TurnRoach(roach);
 
         }
+        */
     } else {
         TurnRoach(roach);
     }
@@ -546,7 +574,7 @@ void DrawRoaches() {
     for (rx = 0; rx < curRoaches; rx++) {
         roach = &roaches[rx];
 
-        if (roach->intX >= 0 && roach->rp != NULL)
+        if (!roach->hidden) {
             XClearArea(display,
                        rootWin,
                        roach->intX,
@@ -554,12 +582,7 @@ void DrawRoaches() {
                        (unsigned int) roach->rp->width,
                        (unsigned int) roach->rp->height,
                        False);
-    }
 
-    for (rx = 0; rx < curRoaches; rx++) {
-        roach = &roaches[rx];
-
-        if (!roach->hidden) {
             roach->intX = (int) roach->x;
             roach->intY = (int) roach->y;
             roach->rp = &roachPix[roach->index];
