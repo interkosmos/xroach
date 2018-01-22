@@ -1,10 +1,10 @@
 /*
     Xroach - A game of skill.  Try to find the roaches under your windows.
-    
+
     Copyright 1991 by J.T. Anderson
 
     jta@locus.com
-    
+
     This program may be freely distributed provided that all
     copyright notices are retained.
 
@@ -14,18 +14,18 @@
     To run:
       ./xroach -speed 2 -squish -rc brown -rgc yellowgreen
 
-    Dedicated to Greg McFarlane. (gregm@otc.otca.oz.au)
-    
-    Squish option contributed by Rick Petkiewizc (rick@locus.com)
-    
+    Dedicated to Greg McFarlane (gregm@otc.otca.oz.au).
+
+    Squish option contributed by Rick Petkiewizc (rick@locus.com).
+
     Virtual root code adapted from patch sent by Colin Rafferty who
-    borrowed it from Tom LaStrange.  Several other folks sent similar
+    borrowed it from Tom LaStrange. Several other folks sent similar
     fixes.
 
     Some glitches removed by patch from Guus Sliepen (guus@sliepen.warande.net)
     in 2001 (see https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=102668#5).
 
-    Last update: 4 December 2017
+    Last update: 2018-JAN-22
 */
 
 /* @(#)xroach.c	1.5 4/2/91 11:53:31 */
@@ -36,24 +36,15 @@
 #include <X11/Xatom.h>
 
 #include <stdio.h>
-#include <math.h>
 #include <stdlib.h>
 #include <signal.h>
-
-#if __STDC__
-#include <stdlib.h>
-#else
-long strtol();
-double strtod();
-char *getenv();
-#endif
+#include <math.h>
 
 char Copyright[] = "Xroach\nCopyright 1991 J.T. Anderson";
 
 #include "roachmap.h"
 
 typedef unsigned long Pixel;
-
 typedef int ErrorHandler();
 
 #define SCAMPER_EVENT (LASTEvent + 1)
@@ -79,16 +70,17 @@ int errorVal = 0;
 int eventBlock = 0;
 Pixmap squishMap;
 
-typedef struct Roach {
+typedef struct Roach
+{
+    RoachMap *rp;
+    int index;
     float x;
     float y;
-    int hidden;
-    int index;
     int intX;
     int intY;
-    int steps;
+    int hidden;
     int turnLeft;
-    RoachMap *rp;
+    int steps;
 } Roach;
 
 Roach *roaches;
@@ -110,21 +102,20 @@ void TurnRoach(Roach *roach);
 void MoveRoach(int rx);
 void DrawRoaches();
 void CoverRoot();
-int RoachErrors(Display *dpy, XErrorEvent *err);
+int RoachErrors(XErrorEvent *err);
 int CalcRootVisible();
 int MarkHiddenRoaches();
 Pixel AllocNamedColor(char *colorName, Pixel dfltPix);
 void checkSquish(XButtonEvent *buttonEvent);
 
-int main(int ac, char *av[]) {
+int main(int ac, char *av[])
+{
     char *arg;
     char *gutsColor = NULL;
     char *roachColor = "black";
     float angle;
-    int ax;
     int needCalc;
     int nVis;
-    int rx;
     RoachMap *rp;
     Window squishWin;
     XEvent ev;
@@ -134,7 +125,8 @@ int main(int ac, char *av[]) {
     /*
        Process command line options.
     */
-    for (ax = 1; ax < ac; ax++) {
+    for (int ax = 1; ax < ac; ax++)
+    {
         arg = av[ax];
 
         if (strcmp(arg, "-display") == 0)
@@ -171,7 +163,8 @@ int main(int ac, char *av[]) {
 
     display = XOpenDisplay(display_name);
 
-    if (display == NULL) {
+    if (display == NULL)
+    {
         if (display_name == NULL)
             display_name = getenv("DISPLAY");
 
@@ -184,7 +177,6 @@ int main(int ac, char *av[]) {
 
     screen = DefaultScreen(display);
     rootWin = FindRootWindow();
-
     black = BlackPixel(display, screen);
 
     display_width = (unsigned int) DisplayWidth(display, screen);
@@ -193,8 +185,9 @@ int main(int ac, char *av[]) {
     /*
        Create roach pixmaps at several orientations.
     */
-    for (ax = 0; ax < 360; ax += ROACH_ANGLE) {
-        rx = ax / ROACH_ANGLE;
+    for (int ax = 0; ax < 360; ax += ROACH_ANGLE)
+    {
+        int rx = ax / ROACH_ANGLE;
         angle = (float) (rx * 0.261799387799);
         rp = &roachPix[rx];
         rp->pixmap = XCreateBitmapFromData(display,
@@ -209,13 +202,12 @@ int main(int ac, char *av[]) {
     /*
       Create the squished pixmap
     */
-    if (squishRoach) {
+    if (squishRoach)
         squishMap = XCreateBitmapFromData(display,
                                           rootWin,
                                           squish_bits,
                                           squish_width,
                                           squish_height);
-    }
 
     roaches = (Roach *) malloc(sizeof(Roach) * maxRoaches);
 
@@ -223,11 +215,14 @@ int main(int ac, char *av[]) {
     XSetForeground(display, gc, AllocNamedColor(roachColor, black));
     XSetFillStyle(display, gc, FillStippled);
 
-    if (squishRoach && gutsColor != NULL) {
+    if (squishRoach && gutsColor != NULL)
+    {
         gutsGC = XCreateGC(display, rootWin, 0L, &xgcv);
         XSetForeground(display, gutsGC, AllocNamedColor(gutsColor, black));
         XSetFillStyle(display, gutsGC, FillStippled);
-    } else {
+    }
+    else
+    {
         gutsGC = gc;
     }
 
@@ -236,22 +231,31 @@ int main(int ac, char *av[]) {
 
     XSelectInput(display, rootWin, ExposureMask | SubstructureNotifyMask);
 
-    if (squishRoach) {
+    if (squishRoach)
+    {
         xswa.event_mask = ButtonPressMask;
         xswa.override_redirect = True;
-        squishWin = XCreateWindow(display, rootWin, 0, 0,
-                                  display_width, display_height, 0,
+        squishWin = XCreateWindow(display,
+                                  rootWin,
+                                  0, 0,
+                                  display_width, display_height,
+                                  0,
                                   CopyFromParent, InputOnly, CopyFromParent,
-                                  CWOverrideRedirect | CWEventMask, &xswa);
+                                  CWOverrideRedirect | CWEventMask,
+                                  &xswa);
         XLowerWindow(display, squishWin);
     }
 
     needCalc = 1;
 
-    while (!done) {
-        if (XPending(display)) {
+    while (!done)
+    {
+        if (XPending(display))
+        {
             XNextEvent(display, &ev);
-        } else {
+        }
+        else
+        {
             if (needCalc)
                 needCalc = CalcRootVisible();
 
@@ -262,13 +266,18 @@ int main(int ac, char *av[]) {
 
             ev.type = SCAMPER_EVENT;
 
-            if (nVis) {
-                if (!squishWinUp && squishRoach) {
+            if (nVis)
+            {
+                if (!squishWinUp && squishRoach)
+                {
                     XMapWindow(display, squishWin);
                     squishWinUp = True;
                 }
-            } else {
-                if (squishWinUp && squishRoach) {
+            }
+            else
+            {
+                if (squishWinUp && squishRoach)
+                {
                     XUnmapWindow(display, squishWin);
                     squishWinUp = False;
                 }
@@ -284,12 +293,12 @@ int main(int ac, char *av[]) {
             }
         }
 
-        switch (ev.type) {
+        switch (ev.type)
+        {
             case SCAMPER_EVENT:
-                for (rx = 0; rx < curRoaches; rx++) {
+                for (int rx = 0; rx < curRoaches; rx++)
                     if (!roaches[rx].hidden)
                         MoveRoach(rx);
-                }
 
                 DrawRoaches();
                 XFlush(display);
@@ -314,20 +323,20 @@ int main(int ac, char *av[]) {
                 break;
 
             default:
-               break;
+                break;
         }
     }
 
     CoverRoot();
-
     XCloseDisplay(display);
-
+    free(roaches);
     exit(0);
 }
 
 #define USEPRT(msg) fprintf(stderr, msg)
 
-void Usage() {
+void Usage()
+{
     USEPRT("Usage: xroach [options]\n\n");
     USEPRT("Options:\n");
     USEPRT("       -display displayname\n");
@@ -340,16 +349,20 @@ void Usage() {
     exit(1);
 }
 
-void SigHandler() {
+void SigHandler()
+{
     /*
        If we are blocked, no roaches are visible and we can just bail
        out.  If we are not blocked, then let the main procedure clean
        up the root window.
     */
-    if (eventBlock) {
+    if (eventBlock)
+    {
         XCloseDisplay(display);
         exit(0);
-    } else {
+    }
+    else
+    {
         done = 1;
     }
 }
@@ -357,17 +370,19 @@ void SigHandler() {
 /*
    Find the root or virtual root window.
 */
-Window FindRootWindow() {
-    int actualFormat;
+Window FindRootWindow()
+{
     Atom actualType;
     Atom swmVroot;
-    int cx;
+    int actualFormat;
+    unsigned char *newRoot;
     unsigned int numChildren;
     unsigned long bytesAfter;
     unsigned long nItems;
-    unsigned char *newRoot;
+    Window *children;
+    Window parentReturn;
     Window realRoot;
-    Window rootReturn, parentReturn, *children;
+    Window rootReturn;
     Window rootWin;
 
     /*
@@ -395,7 +410,8 @@ Window FindRootWindow() {
                &children,
                &numChildren);
 
-    for (cx = 0; cx < numChildren; cx++) {
+    for (int cx = 0; cx < numChildren; cx++)
+    {
         newRoot = NULL;
         nItems = 0;
 
@@ -410,7 +426,8 @@ Window FindRootWindow() {
                                &actualFormat,
                                &nItems,
                                &bytesAfter,
-                               &newRoot) == Success && actualFormat != None) {
+                               &newRoot) == Success && actualFormat != None)
+        {
             if (nItems >= 1)
                 rootWin = *newRoot;
 
@@ -430,14 +447,16 @@ Window FindRootWindow() {
 /*
    Generate random integer between 0 and maxVal-1.
 */
-int RandInt(int maxVal) {
+int RandInt(int maxVal)
+{
     return rand() % maxVal;
 }
 
 /*
    Check for roach completely in specified rectangle.
 */
-int RoachInRect(Roach *roach, int rx, int ry, int x, int y, unsigned int width, unsigned int height) {
+int RoachInRect(Roach *roach, int rx, int ry, int x, int y, unsigned int width, unsigned int height)
+{
     if (rx < x)
         return 0;
 
@@ -456,7 +475,8 @@ int RoachInRect(Roach *roach, int rx, int ry, int x, int y, unsigned int width, 
 /*
    Check for roach overlapping specified rectangle.
 */
-int RoachOverRect(Roach *roach, int rx, int ry, int x, int y, unsigned int width, unsigned int height) {
+int RoachOverRect(Roach *roach, int rx, int ry, int x, int y, unsigned int width, unsigned int height)
+{
     if (rx >= (x + width))
         return 0;
 
@@ -475,10 +495,12 @@ int RoachOverRect(Roach *roach, int rx, int ry, int x, int y, unsigned int width
 /*
    Give birth to a roach.
 */
-void AddRoach() {
+void AddRoach()
+{
     Roach *r;
 
-    if (curRoaches < maxRoaches) {
+    if (curRoaches < maxRoaches)
+    {
         r = &roaches[curRoaches++];
         r->index = RandInt(ROACH_HEADINGS);
         r->rp = &roachPix[r->index];
@@ -487,7 +509,7 @@ void AddRoach() {
         r->intX = -1;
         r->intY = -1;
         r->hidden = 0;
-        r->steps = RandInt(turnSpeed);
+        r->steps = RandInt((int) turnSpeed);
         r->turnLeft = RandInt(100) >= 50;
     }
 }
@@ -495,16 +517,19 @@ void AddRoach() {
 /*
    Turn a roach.
 */
-void TurnRoach(Roach *roach) {
+void TurnRoach(Roach *roach)
+{
     if (roach->index != (roach->rp - roachPix))
         return;
 
-    if (roach->turnLeft) {
+    if (roach->turnLeft)
+    {
         roach->index += (RandInt(30) / 10) + 1;
 
         if (roach->index >= ROACH_HEADINGS)
             roach->index -= ROACH_HEADINGS;
-    } else {
+    } else
+    {
         roach->index -= (RandInt(30) / 10) + 1;
 
         if (roach->index < 0)
@@ -515,11 +540,10 @@ void TurnRoach(Roach *roach) {
 /*
    Move a roach.
 */
-void MoveRoach(int rx) {
+void MoveRoach(int rx)
+{
     float newX;
     float newY;
-    int ii;
-    Roach *r2;
     Roach *roach;
 
     roach = &roaches[rx];
@@ -529,26 +553,29 @@ void MoveRoach(int rx) {
     if (RoachInRect(roach,
                     (int) newX, (int) newY,
                     0, 0,
-                    display_width, display_height)) {
+                    display_width, display_height))
+    {
         roach->x = newX;
         roach->y = newY;
 
-        if (roach->steps-- <= 0) {
+        if (roach->steps-- <= 0)
+        {
             TurnRoach(roach);
-            roach->steps = RandInt(turnSpeed);
+            roach->steps = RandInt((int) turnSpeed);
 
-            /* Previously, roaches would just go around in circles.
-               This makes their movement more interesting (and disgusting too!). */
-            if (RandInt(100) >= 80) {
+            /*
+               Previously, roaches would just go around in circles.
+               This makes their movement more interesting (and disgusting too!).
+            */
+            if (RandInt(100) >= 80)
                 roach->turnLeft ^= 1;
-            }
         }
 
         /* This is a kind of anti-collision algorithm which doesn't do what it is supposed to do,
            it eats CPU time and sometimes makes roaches spin around very crazy. Therefore it is
            commented out.
 
-        for (ii = rx + 2; ii < curRoaches; ii++) {
+        for (int ii = rx + 2; ii < curRoaches; ii++) {
             r2 = &roaches[ii];
 
             if (RoachOverRect(roach,
@@ -559,7 +586,9 @@ void MoveRoach(int rx) {
 
         }
         */
-    } else {
+    }
+    else
+    {
         TurnRoach(roach);
     }
 }
@@ -567,14 +596,16 @@ void MoveRoach(int rx) {
 /*
    Draw all roaches.
 */
-void DrawRoaches() {
-    int rx;
+void DrawRoaches()
+{
     Roach *roach;
 
-    for (rx = 0; rx < curRoaches; rx++) {
+    for (int rx = 0; rx < curRoaches; rx++)
+    {
         roach = &roaches[rx];
 
-        if (!roach->hidden) {
+        if (!roach->hidden)
+        {
             XClearArea(display,
                        rootWin,
                        roach->intX,
@@ -589,10 +620,16 @@ void DrawRoaches() {
 
             XSetStipple(display, gc, roach->rp->pixmap);
             XSetTSOrigin(display, gc, roach->intX, roach->intY);
-            XFillRectangle(display, rootWin, gc,
-                           roach->intX, roach->intY,
-                           (unsigned int) roach->rp->width, (unsigned int) roach->rp->height);
-        } else {
+            XFillRectangle(display,
+                           rootWin,
+                           gc,
+                           roach->intX,
+                           roach->intY,
+                           (unsigned int) roach->rp->width,
+                           (unsigned int) roach->rp->height);
+        }
+        else
+        {
             roach->intX = -1;
         }
     }
@@ -601,7 +638,8 @@ void DrawRoaches() {
 /*
    Cover root window to erase roaches.
 */
-void CoverRoot() {
+void CoverRoot()
+{
     long wamask;
     Window roachWin;
     XSetWindowAttributes xswa;
@@ -621,21 +659,20 @@ void CoverRoot() {
 }
 
 #if !GRAB_SERVER
-
-int RoachErrors(Display *dpy, XErrorEvent *err) {
+int RoachErrors(XErrorEvent *err)
+{
     errorVal = err->error_code;
 
     return 0;
 }
-
 #endif /* GRAB_SERVER */
 
 /*
-   Calculate Visible region of root window.
+   Calculate visible region of root window.
 */
-int CalcRootVisible() {
+int CalcRootVisible()
+{
     int winX, winY;
-    int wx;
     Region covered;
     Region visible;
     unsigned int borderWidth;
@@ -669,8 +706,10 @@ int CalcRootVisible() {
     */
     covered = XCreateRegion();
 
-    for (wx = 0; wx < nChildren; wx++) {
-        if (XEventsQueued(display, QueuedAlready)) {
+    for (int wx = 0; wx < nChildren; wx++)
+    {
+        if (XEventsQueued(display, QueuedAlready))
+        {
             XDestroyRegion(covered);
             return 1;
         }
@@ -681,7 +720,8 @@ int CalcRootVisible() {
         if (errorVal)
             continue;
 
-        if (wa.class == InputOutput && wa.map_state == IsViewable) {
+        if (wa.class == InputOutput && wa.map_state == IsViewable)
+        {
             XGetGeometry(display, children[wx], &dummy,
                          &winX, &winY,
                          &winWidth, &winHeight,
@@ -699,6 +739,7 @@ int CalcRootVisible() {
             XUnionRectWithRegion(&rect, covered, covered);
         }
     }
+
     XFree(children);
 
 #if GRAB_SERVER
@@ -733,7 +774,7 @@ int CalcRootVisible() {
     /*
        Mark all roaches visible.
     */
-    for (wx = 0; wx < curRoaches; wx++)
+    for (int wx = 0; wx < curRoaches; wx++)
         roaches[wx].hidden = 0;
 
     return 0;
@@ -742,17 +783,19 @@ int CalcRootVisible() {
 /*
    Mark hidden roaches.
 */
-int MarkHiddenRoaches() {
+int MarkHiddenRoaches()
+{
     int nVisible;
-    int rx;
     Roach *r;
 
     nVisible = 0;
 
-    for (rx = 0; rx < curRoaches; rx++) {
+    for (int rx = 0; rx < curRoaches; rx++)
+    {
         r = &roaches[rx];
 
-        if (!r->hidden) {
+        if (!r->hidden)
+        {
             if (r->intX > 0 && XRectInRegion(rootVisible,
                                              r->intX,
                                              r->intY,
@@ -770,13 +813,17 @@ int MarkHiddenRoaches() {
 /*
    Allocate a color by name.
 */
-Pixel AllocNamedColor(char *colorName, Pixel dfltPix) {
+Pixel AllocNamedColor(char *colorName, Pixel dfltPix)
+{
     Pixel pix;
     XColor exactcolor;
     XColor scrncolor;
 
-    if (XAllocNamedColor(display, DefaultColormap(display, screen),
-                         colorName, &scrncolor, &exactcolor))
+    if (XAllocNamedColor(display,
+                         DefaultColormap(display, screen),
+                         colorName,
+                         &scrncolor,
+                         &exactcolor))
         pix = scrncolor.pixel;
     else
         pix = dfltPix;
@@ -785,11 +832,10 @@ Pixel AllocNamedColor(char *colorName, Pixel dfltPix) {
 }
 
 /*
- *	squishCheck - Check to see if we have to squish any roaches.
+ *	Check to see if we have to squish any roaches.
  */
-void checkSquish(XButtonEvent *buttonEvent) {
-    int i;
-    int rx;
+void checkSquish(XButtonEvent *buttonEvent)
+{
     int x;
     int y;
     Roach *r;
@@ -797,13 +843,15 @@ void checkSquish(XButtonEvent *buttonEvent) {
     x = buttonEvent->x;
     y = buttonEvent->y;
 
-    for (rx = 0; rx < curRoaches; rx++) {
+    for (int rx = 0; rx < curRoaches; rx++)
+    {
         r = &roaches[rx];
 
         if (r->rp == NULL)
             continue;
 
-        if (x > r->intX && x < (r->intX + r->rp->width) && y > r->intY && y < (r->intY + r->rp->height)) {
+        if (x > r->intX && x < (r->intX + r->rp->width) && y > r->intY && y < (r->intY + r->rp->height))
+        {
             XSetStipple(display, gutsGC, squishMap);
             XSetTSOrigin(display, gutsGC, r->intX, r->intY);
             XFillRectangle(display,
@@ -816,7 +864,7 @@ void checkSquish(XButtonEvent *buttonEvent) {
             /*
             * Delete the roach
             */
-            for (i = rx; i < curRoaches - 1; i++)
+            for (int i = rx; i < curRoaches - 1; i++)
                 roaches[i] = roaches[i + 1];
 
             curRoaches--;
