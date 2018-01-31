@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.5)
 project(xroach)
 
 set(CMAKE_C_STANDARD 99)
