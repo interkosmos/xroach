@@ -9,12 +9,14 @@ some bugs and glitches.
 
 ## Build
 ```
-$ cmake .
+$ mkdir build
+$ cd build/
+$ cmake ..
 $ make
 ```
 In case you do not have an C++ compiler installed, instead run:
 ```
-$ CXX=gcc cmake .
+$ CXX=gcc cmake ..
 ```
 
 ## Run
