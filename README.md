@@ -18,6 +18,10 @@ In case you do not have an C++ compiler installed, instead run:
 ```
 $ CXX=gcc cmake ..
 ```
+To compile without CMake:
+```
+$ cc -I/usr/local/include/ -L/usr/local/lib/ -o xroach xroach.c -lm -lX11
+```
 
 ## Run
 ```
