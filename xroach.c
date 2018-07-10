@@ -9,7 +9,7 @@
     copyright notices are retained.
 
     To build:
-      cc -o xroach -lX11 -lm -I/usr/local/include/ -L/usr/local/lib xroach.c
+      cc -I/usr/local/include/ -L/usr/local/lib/ -o xroach xroach.c -lm -lX11
 
     To run:
       ./xroach -speed 2 -squish -rc brown -rgc yellowgreen
@@ -25,7 +25,7 @@
     Some glitches removed by patch from Guus Sliepen (guus@sliepen.warande.net)
     in 2001 (see https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=102668#5).
 
-    Last update: 2018-JAN-22
+    Last update: 2018-JUL-10
 */
 
 /* @(#)xroach.c	1.5 4/2/91 11:53:31 */
@@ -53,41 +53,41 @@ typedef int ErrorHandler();
 #define GRAB_SERVER    0
 #endif
 
-char *display_name = NULL;
-Display *display;
-GC gc;
-GC gutsGC;
-int screen;
-Pixel black;
+char         *display_name = NULL;
+Display      *display;
+GC           gc;
+GC           gutsGC;
+int          screen;
+Pixel        black;
 unsigned int display_height;
 unsigned int display_width;
-Window rootWin;
+Window       rootWin;
 
-Bool squishRoach = False;
-Bool squishWinUp = False;
-int done = 0;
-int errorVal = 0;
-int eventBlock = 0;
+Bool   squishRoach = False;
+Bool   squishWinUp = False;
+int    done        = 0;
+int    errorVal    = 0;
+int    eventBlock  = 0;
 Pixmap squishMap;
 
 typedef struct Roach
 {
     RoachMap *rp;
-    int index;
-    float x;
-    float y;
-    int intX;
-    int intY;
-    int hidden;
-    int turnLeft;
-    int steps;
+    int      index;
+    float    x;
+    float    y;
+    int      intX;
+    int      intY;
+    int      hidden;
+    int      turnLeft;
+    int      steps;
 } Roach;
 
 Roach *roaches;
-int maxRoaches = 10;
-int curRoaches = 0;
+int   maxRoaches = 10;
+int   curRoaches = 0;
 float roachSpeed = 20.0;
-float turnSpeed = 10.0;
+float turnSpeed  = 10.0;
 
 Region rootVisible = NULL;
 
@@ -110,16 +110,16 @@ void checkSquish(XButtonEvent *buttonEvent);
 
 int main(int ac, char *av[])
 {
-    char *arg;
-    char *gutsColor = NULL;
-    char *roachColor = "black";
-    float angle;
-    int needCalc;
-    int nVis;
-    RoachMap *rp;
-    Window squishWin;
-    XEvent ev;
-    XGCValues xgcv;
+    char                 *arg;
+    char                 *gutsColor  = NULL;
+    char                 *roachColor = "black";
+    float                angle;
+    int                  needCalc;
+    int                  nVis;
+    RoachMap             *rp;
+    Window               squishWin;
+    XEvent               ev;
+    XGCValues            xgcv;
     XSetWindowAttributes xswa;
 
     /*
@@ -175,11 +175,11 @@ int main(int ac, char *av[])
         exit(1);
     }
 
-    screen = DefaultScreen(display);
+    screen  = DefaultScreen(display);
     rootWin = FindRootWindow();
-    black = BlackPixel(display, screen);
+    black   = BlackPixel(display, screen);
 
-    display_width = (unsigned int) DisplayWidth(display, screen);
+    display_width  = (unsigned int) DisplayWidth(display, screen);
     display_height = (unsigned int) DisplayHeight(display, screen);
 
     /*
@@ -330,7 +330,7 @@ int main(int ac, char *av[])
     CoverRoot();
     XCloseDisplay(display);
     free(roaches);
-    exit(0);
+    return 0;
 }
 
 #define USEPRT(msg) fprintf(stderr, msg)
@@ -372,18 +372,18 @@ void SigHandler()
 */
 Window FindRootWindow()
 {
-    Atom actualType;
-    Atom swmVroot;
-    int actualFormat;
+    Atom          actualType;
+    Atom          swmVroot;
+    int           actualFormat;
     unsigned char *newRoot;
-    unsigned int numChildren;
+    unsigned int  numChildren;
     unsigned long bytesAfter;
     unsigned long nItems;
-    Window *children;
-    Window parentReturn;
-    Window realRoot;
-    Window rootReturn;
-    Window rootWin;
+    Window        *children;
+    Window        parentReturn;
+    Window        realRoot;
+    Window        rootReturn;
+    Window        rootWin;
 
     /*
        Get real root window.
@@ -393,7 +393,7 @@ Window FindRootWindow()
     /*
        Get atom for virtual root property.  If the atom doesn't
        exist, we can assume the corresponding property does not
-       exist. 
+       exist.
     */
     swmVroot = XInternAtom(display, "__SWM_VROOT", True);
 
@@ -528,7 +528,8 @@ void TurnRoach(Roach *roach)
 
         if (roach->index >= ROACH_HEADINGS)
             roach->index -= ROACH_HEADINGS;
-    } else
+    }
+    else
     {
         roach->index -= (RandInt(30) / 10) + 1;
 
@@ -584,8 +585,7 @@ void MoveRoach(int rx)
                               (unsigned int) r2->rp->width, (unsigned int) r2->rp->height))
                 TurnRoach(roach);
 
-        }
-        */
+        } */
     }
     else
     {
@@ -640,8 +640,8 @@ void DrawRoaches()
 */
 void CoverRoot()
 {
-    long wamask;
-    Window roachWin;
+    long                 wamask;
+    Window               roachWin;
     XSetWindowAttributes xswa;
 
     xswa.background_pixmap = ParentRelative;
@@ -672,16 +672,16 @@ int RoachErrors(XErrorEvent *err)
 */
 int CalcRootVisible()
 {
-    int winX, winY;
-    Region covered;
-    Region visible;
-    unsigned int borderWidth;
-    unsigned int depth;
-    unsigned int nChildren;
-    unsigned int winHeight, winWidth;
-    Window *children;
-    Window dummy;
-    XRectangle rect;
+    int               winX, winY;
+    Region            covered;
+    Region            visible;
+    unsigned int      borderWidth;
+    unsigned int      depth;
+    unsigned int      nChildren;
+    unsigned int      winHeight, winWidth;
+    Window            *children;
+    Window            dummy;
+    XRectangle        rect;
     XWindowAttributes wa;
 
     /*
@@ -756,7 +756,7 @@ int CalcRootVisible()
     rect.x = 0;
     rect.y = 0;
 
-    rect.width = (unsigned short) display_width;
+    rect.width  = (unsigned short) display_width;
     rect.height = (unsigned short) display_height;
 
     XUnionRectWithRegion(&rect, visible, visible);
@@ -785,7 +785,7 @@ int CalcRootVisible()
 */
 int MarkHiddenRoaches()
 {
-    int nVisible;
+    int   nVisible;
     Roach *r;
 
     nVisible = 0;
@@ -815,7 +815,7 @@ int MarkHiddenRoaches()
 */
 Pixel AllocNamedColor(char *colorName, Pixel dfltPix)
 {
-    Pixel pix;
+    Pixel  pix;
     XColor exactcolor;
     XColor scrncolor;
 
@@ -832,12 +832,12 @@ Pixel AllocNamedColor(char *colorName, Pixel dfltPix)
 }
 
 /*
- *	Check to see if we have to squish any roaches.
+ * Check to see if we have to squish any roaches.
  */
 void checkSquish(XButtonEvent *buttonEvent)
 {
-    int x;
-    int y;
+    int   x;
+    int   y;
     Roach *r;
 
     x = buttonEvent->x;
