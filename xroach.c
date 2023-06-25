@@ -102,7 +102,7 @@ void TurnRoach(Roach *roach);
 void MoveRoach(int rx);
 void DrawRoaches();
 void CoverRoot();
-int RoachErrors(XErrorEvent *err);
+int RoachErrors(Display *display, XErrorEvent *err);
 int CalcRootVisible();
 int MarkHiddenRoaches();
 Pixel AllocNamedColor(char *colorName, Pixel dfltPix);
@@ -318,7 +318,7 @@ int main(int ac, char *av[])
                 break;
 
             case ButtonPress:
-                checkSquish(&ev);
+                checkSquish((XButtonEvent *) &ev);
                 done = !curRoaches;     /* Stop program if there are no more roaches */
                 break;
 
@@ -659,7 +659,7 @@ void CoverRoot()
 }
 
 #if !GRAB_SERVER
-int RoachErrors(XErrorEvent *err)
+int RoachErrors(Display *display, XErrorEvent *err)
 {
     errorVal = err->error_code;
 
